@@ -1,26 +1,19 @@
 void setup() {
   pinMode(5, INPUT_PULLUP);
-  Serial.begin(9600);
   pinMode(8, OUTPUT);
-  digitalWrite(8,LOW);
 }
 
-bool is_on = false;
-long time = millis();
+bool low_signal = true; 
+bool ON = false; 
+byte count_low_signal = 0;
 
 void loop() {
-  if((millis()-time)>=100 && !is_on && !digitalRead(5)){
-    Serial.println("ON");
-    is_on = true;
-    digitalWrite(8,HIGH);
-    while(!digitalRead(5));
-    time = millis();
-  }
-  else if ((millis()-time)>=100 && is_on && !digitalRead(5)){
-    Serial.println("OFF");
-    is_on = false;
-    digitalWrite(8,LOW);
-    while(!digitalRead(5));
-    time = millis();
-  }
+  // Защита от дребезга контактов. Смена состояния сигнала, если количество низких сигналов = 100
+  if (!low_signal && digitalRead(5) && count_low_signal++ >= 100) low_signal = true; 
+  // Включение/выключение диода происходит в том случае, если предыдущий сигнал был низкий, что соответствует не нажатой кнопке
+  if (low_signal && !digitalRead(5)) {
+    low_signal = false;
+    digitalWrite(8, (ON = !ON)); 
+    count_low_signal = 0; 
+  } 
 }
